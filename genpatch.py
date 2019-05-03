@@ -5,6 +5,7 @@ import idaapi
 import ida_kernwin
 import ida_nalt
 import idc
+import sys
 
 class PatchManager(object):
 
@@ -14,13 +15,37 @@ class PatchManager(object):
 
     def generate(self):
         idaapi.visit_patched_bytes(0, idaapi.BADADDR, self.get_patch_byte)
-        print self.patched_bytes
-        path = get_input_file_path() + '_patch.py'
-        print path
-        with open(path, "w") as f:
-            f.write("some string")
+        template_path = ''
+        for path in sys.path:
+            if 'plugins' in path:
+                template_path = path
 
-        ida_kernwin.info('Successfully generated patch to %s from Patched Bytes' % path)
+        template_path += '/patch_template.py'
+        patch_path = idc.get_input_file_path() + '_patch.py'
+
+        template_data = None
+        with open(template_path, "r") as f:
+            template_data = f.readlines()
+
+        lines = 15
+        with open(patch_path, "w") as f:
+            for data in self.patched_bytes:
+                template_data.insert(lines, "# address: %s\n" % data['begin_addr'])
+                lines += 1
+                template_data.insert(lines, "# function name: %s\n" % data['name'])
+                lines += 1
+                template_data.insert(lines, "# comment: %s\n" % data['comment'].replace('\n', ''))
+                lines += 1
+                template_data.insert(lines, "matches = re.findall('%s', target_data)\n" % data['original'])
+                lines += 1
+                template_data.insert(lines, "if len(matches) == 1:\n")
+                lines += 1
+                template_data.insert(lines, "    target_data.replace('%s', '%s')\n" % (data['original'], data['patched']))
+                lines += 1
+            
+            f.writelines(template_data)
+
+        ida_kernwin.info('Successfully generated patch to %s from Patched Bytes' % patch_path)
 
     # callback in 3rd argument of idaapi.visit_patched_bytes
     def get_patch_byte(self, ea, fpos, org_val, patched_val):
