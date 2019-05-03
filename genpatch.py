@@ -15,37 +15,52 @@ class PatchManager(object):
 
     def generate(self):
         idaapi.visit_patched_bytes(0, idaapi.BADADDR, self.get_patch_byte)
+        if len(self.patched_bytes) == 0:
+            msg = 'Cannot generate patch because there is no patch applied.'
+            print('genpatch: %s' % msg)
+            ida_kernwin.warning(msg)
+            return False
+
         template_path = ''
         for path in sys.path:
             if 'plugins' in path:
                 template_path = path
 
-        template_path += '/patch_template.py'
+        template_path += '/patch_template.txt'
         patch_path = idc.get_input_file_path() + '_patch.py'
 
         template_data = None
         with open(template_path, "r") as f:
             template_data = f.readlines()
 
-        lines = 15
+        lines = 13
         with open(patch_path, "w") as f:
             for data in self.patched_bytes:
-                template_data.insert(lines, "# address: %s\n" % data['begin_addr'])
+                template_data.insert(lines, "# address: 0x%x\n" % data['begin_addr'])
                 lines += 1
                 template_data.insert(lines, "# function name: %s\n" % data['name'])
                 lines += 1
-                template_data.insert(lines, "# comment: %s\n" % data['comment'].replace('\n', ''))
+                template_data.insert(lines, "# comment: %s\n" % data['comment'].replace('\n', ' '))
                 lines += 1
                 template_data.insert(lines, "matches = re.findall('%s', target_data)\n" % data['original'])
                 lines += 1
                 template_data.insert(lines, "if len(matches) == 1:\n")
                 lines += 1
-                template_data.insert(lines, "    target_data.replace('%s', '%s')\n" % (data['original'], data['patched']))
+                template_data.insert(lines, "    target_data = target_data.replace('%s', '%s')\n" % (data['original'], data['patched']))
+                lines += 1
+                template_data.insert(lines, "else:\n")
+                lines += 1
+                template_data.insert(lines, '    print("Patch pattern isn\'t unique")\n')
+                lines += 1
+                template_data.insert(lines, "    sys.exit()\n")
                 lines += 1
             
             f.writelines(template_data)
 
-        ida_kernwin.info('Successfully generated patch to %s from Patched Bytes' % patch_path)
+        msg = 'Successfully generated patch to %s from Patched Bytes' % patch_path
+        print('genpatch: %s' % msg)
+        ida_kernwin.info(msg)
+        return True
 
     # callback in 3rd argument of idaapi.visit_patched_bytes
     def get_patch_byte(self, ea, fpos, org_val, patched_val):
