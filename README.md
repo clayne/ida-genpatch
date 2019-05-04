@@ -23,7 +23,7 @@ If patch script is successfully generated, a dialog similar to following appears
 
 ## Patching Script Example
 
-```
+```python
 #!/usr/bin/env python
 # coding: UTF-8
 

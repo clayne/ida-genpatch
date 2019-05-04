@@ -1,10 +1,14 @@
 #!/usr/bin/env python2.7
 # coding: UTF-8
 
+# IDA libraries
 import idaapi
 import ida_kernwin
 import ida_nalt
 import idc
+
+# Python modules
+import os
 import sys
 
 class PatchManager(object):
@@ -24,9 +28,8 @@ class PatchManager(object):
         template_path = ''
         for path in sys.path:
             if 'plugins' in path:
-                template_path = path
+                template_path = os.path.join(path, 'patch_template.txt')
 
-        template_path += '/patch_template.txt'
         patch_path = idc.get_input_file_path() + '_patch.py'
 
         template_data = None
