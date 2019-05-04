@@ -3,7 +3,7 @@ genpatch is IDA plugin that generates a python script for patching binary from `
 genpatch is confirmed to work on IDA Pro 7.x.
 
 ## Background
-During reverse engineering, we often apply the same patch to another binary. For example, when bypassing SSL pinning. Launching IDA just to patch is cumbersome, but patching from the CUI is more convenient, it's easy to share with others who are not familiar with IDA.
+During reverse engineering, we often apply the same patch to another binary. For example, when applying patch for bypassing SSL pinning. Launching IDA just to patch is cumbersome, but patching from the CUI is more convenient, it's easy to share with others who are not familiar with IDA.
 
 # Installation
 Copy file `genpatch.py`, `patch_template.txt` to IDA Plugin folder, then restart IDA Pro to use genpatch.
@@ -21,7 +21,7 @@ If patch script is successfully generated, a dialog similar to following appears
 
 ![dialog](./screenshots/dialog.png)
 
-## Patch Script Example
+## Patching Script Example
 
 ```
 #!/usr/bin/env python
@@ -56,3 +56,6 @@ with open(result_path, "wb") as result_file:
 
 print("Successfully generated patched binary to '%s'" % result_path)
 ```
+
+# License
+The MIT License
